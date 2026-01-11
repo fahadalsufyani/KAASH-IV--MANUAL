@@ -1,169 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KASH IV Guide - Pro Version</title>
     <style>
-        :root {
-            --high-alert-red: #d93025;
-            --standard-blue: #1a73e8;
-            --bg-light: #f1f3f4;
-            --white: #ffffff;
-        }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-light); margin: 0; padding: 10px; color: #202124; }
-        .container { max-width: 600px; margin: auto; }
-        .header { background: var(--standard-blue); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
-        .search-input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 25px; box-sizing: border-box; font-size: 16px; margin-bottom: 20px; outline: none; }
-        .search-input:focus { border-color: var(--standard-blue); }
-        
-        /* Drug Card Styling */
-        .drug-card { background: var(--white); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 8px solid #ccc; position: relative; }
-        .drug-card.high-alert { border-left-color: var(--high-alert-red); background-color: #fff5f5; border: 1px solid var(--high-alert-red); border-left-width: 10px; }
-        
-        .high-alert-badge { background: var(--high-alert-red); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; position: absolute; top: 10px; right: 10px; }
-        
-        .drug-title { font-size: 19px; font-weight: bold; color: #1a73e8; margin-bottom: 10px; }
-        .high-alert .drug-title { color: var(--high-alert-red); }
-        
-        .info-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 14px; }
-        .label { font-weight: 600; color: #5f6368; }
-        .value { font-weight: bold; color: #202124; }
-
-        /* Calculator Section */
-        .calc-box { background: #e8f0fe; padding: 15px; border-radius: 8px; margin-top: 10px; }
-        .high-alert .calc-box { background: #feebeb; }
-        .input-field { width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ccc; text-align: center; }
-        .result-display { background: #202124; color: #34a853; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; }
-        .result-value { font-size: 24px; font-weight: bold; }
-        
-        footer { text-align: center; font-size: 11px; color: #70757a; margin-top: 20px; padding-bottom: 20px; }
+        :root { --high-alert: #d93025; --primary: #1a73e8; --bg: #f4f7f9; --text: #202124; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        header { background: var(--primary); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
+        .search-container { position: sticky; top: 10px; z-index: 1000; }
+        .search { width: 100%; padding: 15px; border: 2px solid var(--primary); border-radius: 10px; box-sizing: border-box; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .drug-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-top: 6px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .drug-card.high-alert { border-top-color: var(--high-alert); }
+        .drug-card h3 { color: var(--primary); margin: 0 0 10px 0; font-size: 1.3rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .high-alert h3 { color: var(--high-alert); }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem; margin-top: 10px; }
+        .info-item { background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #edf0f2; }
+        .info-label { font-weight: bold; color: #5f6368; display: block; margin-bottom: 2px; }
+        .calc-section { background: #e8f0fe; padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px dashed var(--primary); }
+        .calc-section.high-alert-calc { background: #fce8e6; border-color: var(--high-alert); }
+        input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: center; font-weight: bold; }
+        .result { margin-top: 10px; padding: 10px; background: #34a853; color: white; font-weight: bold; border-radius: 6px; text-align: center; display: none; }
+        .stability { grid-column: span 2; background: #fff3e0; border: 1px solid #ffe0b2; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h2 style="margin:0;">KASH Smart IV Guide</h2>
-        <small>Verified Against Manual 2024 & Lippincott Standards</small>
+<header>
+    <h2>دليل أدوية الوريد الذكي (KASH)</h2>
+    <p>Data Source: Hospital IV Manual | Prepared by: Fahad Alsufyani</p>
+</header>
+
+<div class="search-container">
+    <input type="text" id="search" class="search" placeholder="ابحث باسم الدواء (مثال: Norepinephrine)..." onkeyup="filter()">
+</div>
+
+<div id="container">
+    <div class="drug-card high-alert">
+        <h3>Norepinephrine (Levophed) 🚨</h3>
+        <div class="info-grid">
+            <div class="info-item"><span class="info-label">Diluent:</span> D5W / NS</div>
+            <div class="info-item"><span class="info-label">Standard Conc:</span> 4mg / 50ml</div>
+            <div class="info-item"><span class="info-label">Max Conc:</span> 32mg / 250ml</div>
+            <div class="info-item"><span class="info-label">Admin Rate:</span> 0.01 - 3 mcg/kg/min</div>
+            <div class="info-item stability"><span class="info-label">Stability:</span> 24 hours at Room Temp. Discard if brown.</div>
+        </div>
+        <div class="calc-section high-alert-calc">
+            <strong>حاسبة السرعة (ml/hr):</strong><br>
+            الوزن (kg): <input type="number" id="w1" value="70"> 
+            الجرعة (mcg/kg/min): <input type="number" id="d1" step="0.01" oninput="calcMcg(1, 4, 50)">
+            <div id="r1" class="result"></div>
+        </div>
     </div>
 
-    <input type="text" id="search" class="search-input" placeholder="🔍 Search drug name..." onkeyup="filterDrugs()">
-
-    <div id="list"></div>
-
-    <footer>
-        Standard Practice Tool for King Abdulaziz Specialist Hospital (Taif)<br>
-        Always cross-check with official policy.
-    </footer>
+    <div class="drug-card">
+        <h3>Amiodarone (Cordarone)</h3>
+        <div class="info-grid">
+            <div class="info-item"><span class="info-label">Diluent:</span> D5W Only</div>
+            <div class="info-item"><span class="info-label">Standard Conc:</span> 900mg / 500ml</div>
+            <div class="info-item"><span class="info-label">Max Conc:</span> 1.8mg / ml</div>
+            <div class="info-item"><span class="info-label">Admin Rate:</span> 0.5 - 1 mg/min</div>
+            <div class="info-item stability"><span class="info-label">Stability:</span> Use glass or special bag. Stable for 24h.</div>
+        </div>
+        <div class="calc-section">
+            <strong>حاسبة السرعة (ml/hr):</strong><br>
+            الجرعة (mg/min): <input type="number" id="d2" step="0.1" oninput="calcMgMin(2, 900, 500)">
+            <div id="r2" class="result"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Master Database from KASH Manual 2024
-    const medications = [
-        {
-            name: "Amiodarone",
-            isHighAlert: true,
-            diluent: "D5W Only",
-            conc: 1.5, // mg/ml
-            unit: "mg/min",
-            type: "rate",
-            comments: "Use 0.2 micron filter, Non-PVC bag."
-        },
-        {
-            name: "Epinephrine (Adrenaline)",
-            isHighAlert: true,
-            diluent: "NS or D5W",
-            conc: 16, // mcg/ml (based on 4mg in 250ml)
-            unit: "mcg/kg/min",
-            type: "weight",
-            comments: "Risk of necrosis! Central line recommended."
-        },
-        {
-            name: "Norepinephrine",
-            isHighAlert: true,
-            diluent: "D5W Preferred",
-            conc: 16, // mcg/ml (4mg in 250ml)
-            unit: "mcg/kg/min",
-            type: "weight",
-            comments: "Protect from light. Central line required."
-        },
-        {
-            name: "Tazocin",
-            isHighAlert: false,
-            diluent: "NS or D5W",
-            conc: 45, // mg/ml
-            unit: "fixed",
-            comments: "Standard infusion: 30 minutes."
-        },
-        {
-            name: "Dopamine",
-            isHighAlert: true,
-            diluent: "NS, D5W, or LR",
-            conc: 1600, // mcg/ml (400mg in 250ml)
-            unit: "mcg/kg/min",
-            type: "weight",
-            comments: "Monitor BP and HR continuously."
-        }
-    ];
-
-    function renderList(data) {
-        const listDiv = document.getElementById('list');
-        listDiv.innerHTML = '';
-        data.forEach((drug, index) => {
-            const card = document.createElement('div');
-            card.className = `drug-card ${drug.isHighAlert ? 'high-alert' : ''}`;
-            
-            card.innerHTML = `
-                ${drug.isHighAlert ? '<span class="high-alert-badge">HIGH ALERT ⚠️</span>' : ''}
-                <div class="drug-title">${drug.name}</div>
-                <div class="info-row"><span class="label">Diluent:</span> <span class="value">${drug.diluent}</span></div>
-                <div class="info-row"><span class="label">Standard Conc:</span> <span class="value">${drug.conc} ${drug.isHighAlert ? 'mcg/ml' : 'mg/ml'}</span></div>
-                
-                <div class="calc-box">
-                    <strong>Dose Calculator:</strong>
-                    <div style="margin-top:10px;">
-                        ${drug.type === 'weight' ? '<input type="number" id="w_'+index+'" class="input-field" placeholder="Wt(kg)" oninput="calc('+index+')"> kg' : ''}
-                        <input type="number" id="d_'+index+'" class="input-field" placeholder="Dose" oninput="calc('+index+')"> ${drug.unit}
-                    </div>
-                    <div class="result-display">
-                        <div class="result-value" id="res_'+index+'">0.00</div>
-                        <div style="font-size:11px;">mL / hr</div>
-                    </div>
-                </div>
-                <p style="font-size:12px; color:#555;">* ${drug.comments}</p>
-            `;
-            listDiv.appendChild(card);
-        });
+    function calcMcg(id, mg, ml) {
+        let w = document.getElementById('w'+id).value;
+        let d = document.getElementById('d'+id).value;
+        let r = document.getElementById('r'+id);
+        if(d > 0 && w > 0) {
+            let res = (d * w * 60 * ml) / (mg * 1000);
+            r.style.display = "block";
+            r.innerHTML = "السرعة: " + res.toFixed(1) + " ml/hr";
+        } else { r.style.display = "none"; }
     }
 
-    function calc(idx) {
-        const drug = medications[idx];
-        const dose = parseFloat(document.getElementById('d_'+idx).value) || 0;
-        let result = 0;
-
-        if (drug.type === 'weight') {
-            const weight = parseFloat(document.getElementById('w_'+idx).value) || 0;
-            // Formula: (mcg/kg/min * weight * 60) / concentration
-            result = (dose * weight * 60) / drug.conc;
-        } else if (drug.type === 'rate') {
-            // Formula: (mg/min * 60) / concentration
-            result = (dose * 60) / drug.conc;
-        } else {
-            // Fixed rate (e.g. mg/hr)
-            result = dose / drug.conc;
-        }
-
-        document.getElementById('res_'+idx).innerText = result.toFixed(2);
+    function calcMgMin(id, mg, ml) {
+        let d = document.getElementById('d'+id).value;
+        let r = document.getElementById('r'+id);
+        if(d > 0) {
+            let res = (d * 60 * ml) / mg;
+            r.style.display = "block";
+            r.innerHTML = "السرعة: " + res.toFixed(1) + " ml/hr";
+        } else { r.style.display = "none"; }
     }
 
-    function filterDrugs() {
-        const query = document.getElementById('search').value.toLowerCase();
-        const filtered = medications.filter(m => m.name.toLowerCase().includes(query));
-        renderList(filtered);
+    function filter() {
+        let q = document.getElementById('search').value.toLowerCase();
+        let cards = document.getElementsByClassName('drug-card');
+        for(let c of cards) { c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none"; }
     }
-
-    renderList(medications);
 </script>
 
 </body>
