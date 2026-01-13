@@ -1,266 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KASH IV SMART GUIDE</title>
-    <style>
-        :root { --high-alert: #d93025; --primary: #1a73e8; --bg: #f8f9fa; --text: #202124; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        header { background: var(--primary); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .search-container { position: sticky; top: 10px; z-index: 1000; margin-bottom: 20px; }
-        .search { width: 100%; padding: 18px; border: 3px solid var(--primary); border-radius: 12px; font-size: 18px; outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .drug-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 8px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.3s; }
-        .high-alert { border-left-color: var(--high-alert); }
-        .high-alert h3 { color: var(--high-alert); }
-        h3 { margin: 0 0 10px 0; font-size: 1.3rem; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .info-item { background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #eee; font-size: 0.8rem; }
-        .label { font-weight: bold; color: #5f6368; display: block; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 2px; }
-        .full-width { grid-column: span 2; background: #fffde7; border-color: #fff9c4; }
-        .calc-section { background: #e8f0fe; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); margin-top: 10px; }
-        .input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-        input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; text-align: center; }
-        .result { margin-top: 10px; padding: 12px; background: #1e8e3e; color: white; font-weight: bold; border-radius: 8px; text-align: center; display: none; font-size: 1.1rem; }
-        footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #70757a; border-top: 1px solid #ddd; margin-top: 20px; }
-    </style>
+<meta charset="UTF-8">
+<title>KAASH IV – ICU Drug Calculator</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f5;
+}
+
+.container {
+  max-width: 420px;
+  margin: 40px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+}
+
+button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+  background: #0056b3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+#warning {
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+</style>
 </head>
+
 <body>
 
-<header>
-    <h1>KASH IV SMART GUIDE</h1>
-    <p>Data Source: Hospital IV Manual | Prepared by: Fahad Alsufyani</p>
-</header>
+<div class="container">
+  <h2>ICU IV Drug Calculator</h2>
 
-<div class="search-container">
-    <input type="text" id="search" class="search" placeholder="Search by drug name (e.g., Norepinephrine)..." onkeyup="filter()">
+  <label>Drug</label>
+  <select id="drug"></select>
+
+  <label>Patient Weight (kg)</label>
+  <input type="number" id="weight" placeholder="e.g. 70">
+
+  <label>Prescribed Dose</label>
+  <input type="number" id="dose" placeholder="mcg/kg/min or mg/min">
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div id="warning"></div>
+  <div id="result"></div>
 </div>
 
-<div id="drugContainer"></div>
-
 <script>
-    const drugs = [
-        // Vasopressors & Critical Care
-        { n: "Norepinephrine (Levophed) 🚨", a: 1, di: "D5W / NS", sc: "4mg / 50ml", mc: "32mg / 250ml", r: "0.01 - 3 mcg/kg/min", st: "24 hours at Room Temp. Discard if brown.", ty: "mcgkgmin", mg: 4, ml: 50 },
-        { n: "Epinephrine (Adrenaline) 🚨", a: 1, di: "D5W / NS", sc: "4mg / 250ml", mc: "20mg / 250ml", r: "0.01 - 1 mcg/kg/min", st: "24h stability. Protect from light.", ty: "mcgkgmin", mg: 4, ml: 250 },
-        { n: "Dopamine 🚨", a: 1, di: "D5W / NS", sc: "400mg / 250ml", mc: "3.2mg / ml", r: "2 - 20 mcg/kg/min", st: "24h at Room Temp.", ty: "mcgkgmin", mg: 400, ml: 250 },
-        { n: "Amiodarone (Cordarone) 🚨", a: 1, di: "D5W Only", sc: "900mg / 500ml", mc: "1.8mg / ml", r: "0.5 - 1 mg/min", st: "Use non-PVC bags. 24h stability.", ty: "mgmin", mg: 900, ml: 500 },
-        { n: "Vasopressin 🚨", a: 1, di: "NS / D5W", sc: "20Units / 50ml", mc: "1Unit / ml", r: "0.01 - 0.04 Units/min", st: "24h stable once diluted.", ty: "unitsmin", mg: 20, ml: 50 },
-        
-        // Antibiotics (The full 95 list starts here)
-        { n: "Vancomycin 🚨", a: 1, di: "NS / D5W", sc: "1g / 250ml", mc: "5mg / ml", r: "Over 60-120 min", st: "24h stability. Avoid rapid infusion.", ty: "units", mg: 1000, ml: 250 },
-        { n: "Meropenem", a: 0, di: "NS / D5W", sc: "1g / 100ml", mc: "50mg / ml", r: "Over 15-30 min", st: "2h RT / 12h Fridge.", ty: "units", mg: 1, ml: 100 },
-        { n: "Piperacillin/Tazobactam", a: 0, di: "NS Only", sc: "4.5g / 100ml", mc: "200mg / ml", r: "Over 30 min", st: "24h stability in Fridge.", ty: "units", mg: 4.5, ml: 100 },
-        { n: "Ceftriaxone", a: 0, di: "NS / D5W", sc: "1g / 100ml", mc: "40mg / ml", r: "Over 30 min", st: "24h at Room Temp.", ty: "units", mg: 1, ml: 100 },
-        { n: "Metronidazole", a: 0, di: "Premixed", sc: "500mg / 100ml", mc: "5mg / ml", r: "Over 20-60 min", st: "Protect from light.", ty: "units", mg: 500, ml: 100 },
-        { n: "Amikacin", a: 0, di: "NS / D5W", sc: "500mg / 100ml", mc: "5mg / ml", r: "Over 30-60 min", st: "24h stability.", ty: "units", mg: 500, ml: 100 },
-        { n: "Ciprofloxacin", a: 0, di: "Premixed", sc: "400mg / 200ml", mc: "2mg / ml", r: "Over 60 min", st: "24h. Light sensitive.", ty: "units", mg: 400, ml: 200 },
-        { n: "Gentamicin", a: 0, di: "NS / D5W", sc: "80mg / 100ml", mc: "Varies", r: "Over 30-60 min", st: "24h stability.", ty: "units", mg: 80, ml: 100 },
-        { n: "Clindamycin", a: 0, di: "NS / D5W", sc: "600mg / 100ml", mc: "18mg / ml", r: "Over 20-30 min", st: "24h at Room Temp.", ty: "units", mg: 600, ml: 100 },
-        { n: "Imipenem/Cilastatin", a: 0, di: "NS / D5W", sc: "500mg / 100ml", mc: "5mg / ml", r: "Over 30-60 min", st: "4h stability at RT.", ty: "units", mg: 500, ml: 100 },
-        
-        // Sedation & Electrolytes
-        { n: "Propofol (Diprivan) 🚨", a: 1, di: "Pure 1%", sc: "1000mg / 100ml", mc: "20mg / ml", r: "5 - 50 mcg/kg/min", st: "Discard after 12h.", ty: "mcgkgmin", mg: 1000, ml: 100 },
-        { n: "Fentanyl 🚨", a: 1, di: "NS / D5W", sc: "2500mcg / 50ml", mc: "50mcg / ml", r: "25 - 250 mcg/hr", st: "24h stability.", ty: "units", mg: 2500, ml: 50 },
-        { n: "Midazolam 🚨", a: 1, di: "NS / D5W", sc: "50mg / 50ml", mc: "1mg / ml", r: "1 - 10 mg/hr", st: "24h stability.", ty: "units", mg: 50, ml: 50 },
-        { n: "Insulin (Regular) 🚨", a: 1, di: "NS Only", sc: "50U / 50ml", mc: "1U / ml", r: "Per BSL Protocol", st: "Flush 20ml tubing.", ty: "units", mg: 50, ml: 50 },
-        { n: "Potassium Chloride 🚨", a: 1, di: "NS / D5W", sc: "40mEq / 100ml", mc: "Central Line", r: "10 - 20 mEq/hr", st: "Mix well. High Alert.", ty: "units", mg: 40, ml: 100 }
-        
-        // ... I will continue adding all 95 in the next code block to ensure they all appear.
-    ];
+const drugs = [
+  { name: "Norepinephrine", highAlert: true, concentration: 8, unit: "mcg/kg/min" },
+  { name: "Dopamine", highAlert: true, concentration: 1600, unit: "mcg/kg/min" },
+  { name: "Dobutamine", highAlert: true, concentration: 500, unit: "mcg/kg/min" },
+  { name: "Nitroglycerin", highAlert: true, concentration: 200, unit: "mcg/min" },
+  { name: "Amiodarone", highAlert: true, concentration: 1.8, unit: "mg/min" }
+];
 
-    const container = document.getElementById('drugContainer');
+const drugSelect = document.getElementById("drug");
 
-    function render() {
-        drugs.sort((a,b) => a.n.localeCompare(b.n)).forEach((d, i) => {
-            const card = document.createElement('div');
-            card.className = `drug-card ${d.a ? 'high-alert' : ''}`;
-            let inputs = d.ty.includes('kg') ? `<div><span class="label">Weight (kg)</span><input type="number" id="w${i}" value="70"></div>` : '';
-            let unit = d.ty.includes('mcg') ? 'mcg' : (d.ty.includes('mg') ? 'mg' : 'Units/mEq');
-            let time = d.ty.includes('min') ? 'min' : 'hr';
-            
-            card.innerHTML = `
-                <h3>${d.n}</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span class="label">Diluent</span>${d.di}</div>
-                    <div class="info-item"><span class="label">Standard Conc</span>${d.sc}</div>
-                    <div class="info-item"><span class="label">Max Conc</span>${d.mc}</div>
-                    <div class="info-item"><span class="label">Admin Rate</span>${d.r}</div>
-                    <div class="info-item full-width"><span class="label">Stability</span>${d.st}</div>
-                </div>
-                <div class="calc-section">
-                    <strong>IV Pump Calculator (ml/hr)</strong>
-                    <div class="input-row">
-                        ${inputs}
-                        <div><span class="label">Dose (${unit}/${d.ty.includes('kg')?'kg/':''}${time})</span><input type="number" id="dose${i}" step="0.01" oninput="run(${i})"></div>
-                    </div>
-                    <div id="res${i}" class="result"></div>
-                </div>`;
-            container.appendChild(card);
-        });
-    }
+drugs.forEach(d => {
+  const opt = document.createElement("option");
+  opt.value = d.name;
+  opt.text = d.name;
+  drugSelect.appendChild(opt);
+});
 
-    function run(i) {
-        const d = drugs[i], dose = parseFloat(document.getElementById(`dose${i}`).value), res = document.getElementById(`res${i}`);
-        let w = d.ty.includes('kg') ? parseFloat(document.getElementById(`w${i}`).value) : 1, val = 0;
-        if (dose > 0) {
-            if (d.ty === "mcgkgmin") val = (dose * w * 60 * d.ml) / (d.mg * 1000);
-            else if (d.ty === "mgmin") val = (dose * 60 * d.ml) / d.mg;
-            else if (d.ty === "units") val = (dose * d.ml) / d.mg;
-            else if (d.ty === "unitsmin") val = (dose * 60 * d.ml) / d.mg;
-            else if (d.ty === "mcgkghr") val = (dose * w * d.ml) / (d.mg);
-            res.style.display = "block"; res.innerHTML = `SET PUMP TO: ${val.toFixed(1)} ml/hr`;
-        } else res.style.display = "none";
-    }
+function calculate() {
+  const drug = drugs.find(d => d.name === drugSelect.value);
+  const weight = parseFloat(document.getElementById("weight").value);
+  const dose = parseFloat(document.getElementById("dose").value);
 
-    function filter() {
-        let q = document.getElementById('search').value.toLowerCase();
-        for (let c of document.getElementsByClassName('drug-card')) {
-            c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none";
-        }
-    }
-    render();
+  if (isNaN(dose) || (drug.unit === "mcg/kg/min" && isNaN(weight))) {
+    alert("Please enter valid numbers");
+    return;
+  }
+
+  let dosePerMin = drug.unit === "mcg/kg/min" ? dose * weight : dose;
+  let dosePerHour = dosePerMin * 60;
+  let mlPerHour = dosePerHour / drug.concentration;
+
+  document.getElementById("result").innerHTML =
+    `Dose per minute: ${dosePerMin.toFixed(2)} mcg<br>
+     Dose per hour: ${dosePerHour.toFixed(2)} mcg<br>
+     <b>Pump Rate: ${mlPerHour.toFixed(2)} mL/hr</b>`;
+
+  if (drug.highAlert) {
+    document.getElementById("warning").innerHTML =
+      "🔴 HIGH ALERT MEDICATION – Double check required!";
+    document.getElementById("warning").style.color = "red";
+  }
+}
 </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KASH IV SMART GUIDE</title>
-    <style>
-        :root { --high-alert: #d93025; --primary: #1a73e8; --bg: #f8f9fa; --text: #202124; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        header { background: var(--primary); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
-        .search-container { position: sticky; top: 10px; z-index: 1000; margin-bottom: 20px; }
-        .search { width: 100%; padding: 15px; border: 3px solid var(--primary); border-radius: 10px; font-size: 18px; outline: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .drug-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 8px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .high-alert { border-left-color: var(--high-alert); }
-        .high-alert h3 { color: var(--high-alert); }
-        h3 { margin: 0 0 10px 0; font-size: 1.15rem; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eee; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; font-size: 0.85rem; }
-        .info-item { background: #f8f9fa; padding: 6px; border-radius: 4px; border: 1px solid #eee; }
-        .label { font-weight: bold; color: #5f6368; display: block; font-size: 0.7rem; text-transform: uppercase; }
-        .full-width { grid-column: span 2; background: #fffde7; }
-        .calc-section { background: #e8f0fe; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); }
-        .input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 5px; }
-        input { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; text-align: center; font-weight: bold; }
-        .result { margin-top: 10px; padding: 10px; background: #1e8e3e; color: white; font-weight: bold; border-radius: 6px; text-align: center; display: none; }
-        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #777; }
-    </style>
-</head>
-<body>
 
-<header>
-    <h1>KASH IV SMART GUIDE</h1>
-    <p>Comprehensive 95-Drug Manual | IV Calculator</p>
-</header>
-
-<div class="search-container">
-    <input type="text" id="search" class="search" placeholder="Search drug name..." onkeyup="filter()">
-</div>
-
-<div id="drugContainer"></div>
-
-<script>
-    const drugs = [
-        // CRITICAL / VASOPRESSORS
-        { n: "Norepinephrine (Levophed) 🚨", a: 1, di: "D5W / NS", sc: "4mg/50ml", mc: "32mg/250ml", r: "0.01-3 mcg/kg/min", st: "24h. Protect from light.", ty: "mcgkgmin", mg: 4, ml: 50 },
-        { n: "Epinephrine (Adrenaline) 🚨", a: 1, di: "D5W / NS", sc: "4mg/250ml", mc: "20mg/250ml", r: "0.01-1 mcg/kg/min", st: "24h. Light sensitive.", ty: "mcgkgmin", mg: 4, ml: 250 },
-        { n: "Dopamine 🚨", a: 1, di: "D5W / NS", sc: "400mg/250ml", mc: "3.2mg/ml", r: "2-20 mcg/kg/min", st: "24h stability.", ty: "mcgkgmin", mg: 400, ml: 250 },
-        { n: "Vasopressin 🚨", a: 1, di: "NS / D5W", sc: "20U/50ml", mc: "1U/ml", r: "0.01-0.04 U/min", st: "24h stability.", ty: "unitsmin", mg: 20, ml: 50 },
-        { n: "Dobutamine", a: 0, di: "D5W / NS", sc: "250mg/250ml", mc: "5mg/ml", r: "2-20 mcg/kg/min", st: "24h stability.", ty: "mcgkgmin", mg: 250, ml: 250 },
-        
-        // CARDIAC
-        { n: "Amiodarone 🚨", a: 1, di: "D5W Only", sc: "900mg/500ml", mc: "1.8mg/ml", r: "0.5-1 mg/min", st: "Non-PVC set. 24h.", ty: "mgmin", mg: 900, ml: 500 },
-        { n: "Lidocaine", a: 0, di: "D5W Only", sc: "2g/500ml", mc: "4mg/ml", r: "1-4 mg/min", st: "24h stability.", ty: "mgmin", mg: 2000, ml: 500 },
-        { n: "Labetalol", a: 0, di: "NS / D5W", sc: "200mg/200ml", mc: "2mg/ml", r: "1-2 mg/min", st: "24h stability.", ty: "mgmin", mg: 200, ml: 200 },
-        { n: "Nitroglycerin", a: 0, di: "D5W / NS", sc: "50mg/250ml", mc: "400mcg/ml", r: "5-200 mcg/min", st: "Non-PVC tubing.", ty: "mcgminDirect", mg: 50, ml: 250 },
-        { n: "Milrinone", a: 0, di: "NS / D5W", sc: "20mg/100ml", mc: "0.2mg/ml", r: "0.375-0.75 mcg/kg/min", st: "24h.", ty: "mcgkgmin", mg: 20, ml: 100 },
-
-        // SEDATION
-        { n: "Propofol (Diprivan) 🚨", a: 1, di: "Pure 1%", sc: "1000mg/100ml", mc: "20mg/ml", r: "5-50 mcg/kg/min", st: "12h limit.", ty: "mcgkgmin", mg: 1000, ml: 100 },
-        { n: "Fentanyl 🚨", a: 1, di: "NS / D5W", sc: "2500mcg/50ml", mc: "50mcg/ml", r: "25-250 mcg/hr", st: "24h stability.", ty: "units", mg: 2500, ml: 50 },
-        { n: "Midazolam 🚨", a: 1, di: "NS / D5W", sc: "50mg/50ml", mc: "1mg/ml", r: "1-10 mg/hr", st: "24h stability.", ty: "units", mg: 50, ml: 50 },
-        { n: "Dexmedetomidine", a: 0, di: "NS Only", sc: "200mcg/50ml", mc: "4mcg/ml", r: "0.2-1.4 mcg/kg/hr", st: "24h.", ty: "mcgkghr", mg: 200, ml: 50 },
-        { n: "Ketamine", a: 0, di: "NS / D5W", sc: "500mg/50ml", mc: "10mg/ml", r: "0.1-0.5 mg/kg/hr", st: "24h.", ty: "mcgkghr", mg: 500, ml: 50 },
-
-        // ANTIBIOTICS (Sample of the 60+ in manual)
-        { n: "Vancomycin 🚨", a: 1, di: "NS / D5W", sc: "1g/250ml", mc: "5mg/ml", r: "60-120 min", st: "24h stability.", ty: "units", mg: 1000, ml: 250 },
-        { n: "Meropenem", a: 0, di: "NS / D5W", sc: "1g/100ml", mc: "50mg/ml", r: "15-30 min", st: "2h RT.", ty: "units", mg: 1, ml: 100 },
-        { n: "Piperacillin/Tazobactam", a: 0, di: "NS Only", sc: "4.5g/100ml", mc: "200mg/ml", r: "30 min", st: "24h Fridge.", ty: "units", mg: 4.5, ml: 100 },
-        { n: "Ceftriaxone", a: 0, di: "NS / D5W", sc: "1g/100ml", mc: "40mg/ml", r: "30 min", st: "24h.", ty: "units", mg: 1, ml: 100 },
-        { n: "Amikacin", a: 0, di: "NS / D5W", sc: "500mg/100ml", mc: "5mg/ml", r: "30-60 min", st: "24h.", ty: "units", mg: 500, ml: 100 },
-        { n: "Ciprofloxacin", a: 0, di: "Premix", sc: "400mg/200ml", mc: "2mg/ml", r: "60 min", st: "Light sensitive.", ty: "units", mg: 400, ml: 200 },
-        { n: "Clindamycin", a: 0, di: "NS / D5W", sc: "600mg/100ml", mc: "18mg/ml", r: "20-30 min", st: "24h.", ty: "units", mg: 600, ml: 100 },
-        { n: "Colistin", a: 0, di: "NS / D5W", sc: "100ml", mc: "Varies", r: "30-60 min", st: "Immediate use.", ty: "units", mg: 1, ml: 100 },
-        { n: "Gentamicin", a: 0, di: "NS / D5W", sc: "80mg/100ml", mc: "Varies", r: "30-60 min", st: "24h.", ty: "units", mg: 80, ml: 100 },
-        { n: "Imipenem/Cilastatin", a: 0, di: "NS / D5W", sc: "500mg/100ml", mc: "5mg/ml", r: "30-60 min", st: "4h RT.", ty: "units", mg: 500, ml: 100 },
-        { n: "Linezolid", a: 0, di: "Premix", sc: "600mg/300ml", mc: "2mg/ml", r: "30-120 min", st: "24h.", ty: "units", mg: 600, ml: 300 },
-        { n: "Metronidazole", a: 0, di: "Premix", sc: "500mg/100ml", mc: "5mg/ml", r: "20-60 min", st: "Protect light.", ty: "units", mg: 500, ml: 100 },
-
-        // OTHERS
-        { n: "Potassium Chloride 🚨", a: 1, di: "NS / D5W", sc: "40mEq/100ml", mc: "Central", r: "10-20 mEq/hr", st: "Mix well.", ty: "units", mg: 40, ml: 100 },
-        { n: "Insulin (Regular) 🚨", a: 1, di: "NS Only", sc: "50U/50ml", mc: "1U/ml", r: "BSL Protocol", st: "Flush 20ml.", ty: "units", mg: 50, ml: 50 },
-        { n: "Heparin 🚨", a: 1, di: "NS / D5W", sc: "25000U/250ml", mc: "100U/ml", r: "Nomogram", st: "24h.", ty: "units", mg: 25000, ml: 250 },
-        { n: "Magnesium Sulfate", a: 0, di: "NS / D5W", sc: "2g/50ml", mc: "20g/500ml", r: "1-2 g/hr", st: "24h.", ty: "units", mg: 2, ml: 50 },
-        { n: "Pantoprazole", a: 0, di: "NS Only", sc: "40mg/100ml", mc: "0.8mg/ml", r: "15 min", st: "24h.", ty: "units", mg: 40, ml: 100 }
-        // Adding more to reach 95...
-    ];
-
-    const container = document.getElementById('drugContainer');
-
-    function render() {
-        drugs.sort((a,b) => a.n.localeCompare(b.n)).forEach((d, i) => {
-            const card = document.createElement('div');
-            card.className = `drug-card ${d.a ? 'high-alert' : ''}`;
-            let inputs = d.ty.includes('kg') ? `<div><span class="label">Weight (kg)</span><input type="number" id="w${i}" value="70"></div>` : '';
-            let unit = d.ty.includes('mcg') ? 'mcg' : (d.ty.includes('mg') ? 'mg' : 'U/mEq');
-            let time = d.ty.includes('min') ? 'min' : 'hr';
-            
-            card.innerHTML = `
-                <h3>${d.n}</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span class="label">Diluent</span>${d.di}</div>
-                    <div class="info-item"><span class="label">Std Conc</span>${d.sc}</div>
-                    <div class="info-item"><span class="label">Max Conc</span>${d.mc}</div>
-                    <div class="info-item"><span class="label">Rate</span>${d.r}</div>
-                    <div class="info-item full-width"><span class="label">Stability</span>${d.st}</div>
-                </div>
-                <div class="calc-section">
-                    <strong>IV Pump Calculator (ml/hr)</strong>
-                    <div class="input-row">
-                        ${inputs}
-                        <div><span class="label">Dose (${unit}/${d.ty.includes('kg')?'kg/':''}${time})</span><input type="number" id="dose${i}" step="0.01" oninput="run(${i})"></div>
-                    </div>
-                    <div id="res${i}" class="result"></div>
-                </div>`;
-            container.appendChild(card);
-        });
-    }
-
-    function run(i) {
-        const d = drugs[i], dose = parseFloat(document.getElementById(`dose${i}`).value), res = document.getElementById(`res${i}`);
-        let w = d.ty.includes('kg') ? parseFloat(document.getElementById(`w${i}`).value) : 1, val = 0;
-        if (dose > 0) {
-            if (d.ty === "mcgkgmin") val = (dose * w * 60 * d.ml) / (d.mg * 1000);
-            else if (d.ty === "mgmin") val = (dose * 60 * d.ml) / d.mg;
-            else if (d.ty === "units") val = (dose * d.ml) / (d.mg < 1 ? 1 : d.mg);
-            else if (d.ty === "unitsmin") val = (dose * 60 * d.ml) / d.mg;
-            else if (d.ty === "mcgkghr") val = (dose * w * d.ml) / (d.mg);
-            else if (d.ty === "mcgminDirect") val = (dose * 60 * d.ml) / (d.mg * 1000);
-            res.style.display = "block"; res.innerHTML = `SET PUMP TO: ${val.toFixed(1)} ml/hr`;
-        } else res.style.display = "none";
-    }
-
-    function filter() {
-        let q = document.getElementById('search').value.toLowerCase();
-        for (let c of document.getElementsByClassName('drug-card')) {
-            c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none";
-        }
-    }
-    render();
-</script>
 </body>
 </html>
