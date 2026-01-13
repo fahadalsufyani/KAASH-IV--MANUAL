@@ -1,1 +1,118 @@
-<h1>Reset</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KAASH IV – ICU Drug Calculator</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f5;
+}
+
+.container {
+  max-width: 420px;
+  margin: 40px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+}
+
+button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+  background: #0056b3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+#warning {
+  margin-top: 15px;
+  font-weight: bold;
+  color: red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>ICU IV Drug Calculator</h2>
+
+  <label>Drug</label>
+  <select id="drug"></select>
+
+  <label>Patient Weight (kg)</label>
+  <input type="number" id="weight" placeholder="e.g. 70">
+
+  <label>Prescribed Dose</label>
+  <input type="number" id="dose" placeholder="mcg/kg/min or mcg/min">
+
+  <button id="calcBtn">Calculate</button>
+
+  <div id="warning"></div>
+  <div id="result"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const drugs = [
+    { name: "Norepinephrine", highAlert: true, type: "W", concentration: 8, diluent: ["NS","D5W"] },
+    { name: "Dopamine", highAlert: true, type: "W", concentration: 1600, diluent: ["NS","D5W"] },
+    { name: "Dobutamine", highAlert: true, type: "W", concentration: 500, diluent: ["NS","D5W"] },
+    { name: "Epinephrine", highAlert: true, type: "N", concentration: 4, diluent: ["D5W"] },
+    { name: "Nitroglycerin", highAlert: true, type: "N", concentration: 200, diluent: ["NS","D5W"] }
+  ];
+
+  const drugSelect = document.getElementById("drug");
+  drugs.forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d.name;
+    opt.textContent = d.name;
+    drugSelect.appendChild(opt);
+  });
+
+  document.getElementById("calcBtn").onclick = function () {
+    const drug = drugs.find(d => d.name === drugSelect.value);
+    const weight = parseFloat(document.getElementById("weight").value);
+    const dose = parseFloat(document.getElementById("dose").value);
+
+    if (!drug || isNaN(dose) || (drug.type === "W" && isNaN(weight))) {
+      alert("Please enter valid values");
+      return;
+    }
+
+    let mlHr = drug.type === "W"
+      ? (dose * weight * 60) / drug.concentration
+      : (dose * 60) / drug.concentration;
+
+    document.getElementById("result").innerHTML =
+      `<b>Pump Rate:</b> ${mlHr.toFixed(2)} mL/hr<br>
+       <b>Diluent:</b> ${drug.diluent.join(" / ")}`;
+
+    document.getElementById("warning").innerHTML =
+      drug.highAlert ? "🔴 HIGH ALERT MEDICATION – Double check required" : "";
+  };
+
+});
+</script>
+
+</body>
+</html>
