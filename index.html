@@ -71,15 +71,132 @@ button {
 </div>
 
 <script>
+/* ===================== DRUG DATABASE (PHASE 1 – ICU & HIGH ALERT) ===================== */
+
 const drugs = [
-  { name: "Norepinephrine", highAlert: true, concentration: 8, unit: "mcg/kg/min" },
-  { name: "Dopamine", highAlert: true, concentration: 1600, unit: "mcg/kg/min" },
-  { name: "Dobutamine", highAlert: true, concentration: 500, unit: "mcg/kg/min" },
-  { name: "Nitroglycerin", highAlert: true, concentration: 200, unit: "mcg/min" },
-  { name: "Amiodarone", highAlert: true, concentration: 1.8, unit: "mg/min" }
+
+  /* ===== VASOPRESSORS (WEIGHT BASED) ===== */
+  {
+    name: "Norepinephrine",
+    category: "Vasopressor",
+    highAlert: true,
+    calcType: "WEIGHT_CONTINUOUS",
+    unit: "mcg/kg/min",
+    concentration: 8,          // mcg/mL (4 mg / 500 mL)
+    diluent: ["NS", "D5W"]
+  },
+  {
+    name: "Dopamine",
+    category: "Vasopressor",
+    highAlert: true,
+    calcType: "WEIGHT_CONTINUOUS",
+    unit: "mcg/kg/min",
+    concentration: 1600,       // mcg/mL (400 mg / 250 mL)
+    diluent: ["NS", "D5W"]
+  },
+  {
+    name: "Dobutamine",
+    category: "Inotrope",
+    highAlert: true,
+    calcType: "WEIGHT_CONTINUOUS",
+    unit: "mcg/kg/min",
+    concentration: 500,        // mcg/mL (250 mg / 500 mL)
+    diluent: ["NS", "D5W"]
+  },
+
+  /* ===== NON-WEIGHT CONTINUOUS ===== */
+  {
+    name: "Epinephrine",
+    category: "Vasopressor",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "mcg/min",
+    concentration: 4,          // mcg/mL (1 mg / 250 mL)
+    diluent: ["D5W"]
+  },
+  {
+    name: "Nitroglycerin",
+    category: "Vasodilator",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "mcg/min",
+    concentration: 200,        // mcg/mL (50 mg / 250 mL)
+    diluent: ["NS", "D5W"]
+  },
+  {
+    name: "Vasopressin",
+    category: "Vasopressor",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "units/min",
+    concentration: 0.1,
+    diluent: ["NS", "D5W"]
+  },
+
+  /* ===== SEDATION / ANALGESIA ===== */
+  {
+    name: "Propofol",
+    category: "Sedation",
+    highAlert: true,
+    calcType: "WEIGHT_CONTINUOUS",
+    unit: "mcg/kg/min",
+    concentration: 10,
+    diluent: ["D5W"]
+  },
+  {
+    name: "Midazolam",
+    category: "Sedation",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "mg/hr",
+    concentration: 1,
+    diluent: ["NS", "D5W"]
+  },
+  {
+    name: "Fentanyl",
+    category: "Analgesic",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "mcg/hr",
+    concentration: 50,
+    diluent: ["NS", "D5W"]
+  },
+
+  /* ===== ELECTROLYTES ===== */
+  {
+    name: "Potassium Chloride",
+    category: "Electrolyte",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "mEq/hr",
+    concentration: 2,
+    diluent: ["NS"]
+  },
+  {
+    name: "Magnesium Sulfate",
+    category: "Electrolyte",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "g/hr",
+    concentration: 0.1,
+    diluent: ["NS", "D5W"]
+  },
+  {
+    name: "Calcium Gluconate",
+    category: "Electrolyte",
+    highAlert: true,
+    calcType: "NON_WEIGHT_CONTINUOUS",
+    unit: "g/hr",
+    concentration: 0.1,
+    diluent: ["NS", "D5W"]
+  }
+
 ];
 
+/* ===================== POPULATE DRUG LIST ===================== */
+
 const drugSelect = document.getElementById("drug");
+drugSelect.innerHTML = "";
 
 drugs.forEach(d => {
   const opt = document.createElement("option");
@@ -88,32 +205,52 @@ drugs.forEach(d => {
   drugSelect.appendChild(opt);
 });
 
+/* ===================== CALCULATION ENGINE ===================== */
+
 function calculate() {
+
   const drug = drugs.find(d => d.name === drugSelect.value);
   const weight = parseFloat(document.getElementById("weight").value);
   const dose = parseFloat(document.getElementById("dose").value);
 
-  if (isNaN(dose) || (drug.unit === "mcg/kg/min" && isNaN(weight))) {
+  if (!drug) return;
+
+  if (isNaN(dose) || (drug.calcType === "WEIGHT_CONTINUOUS" && isNaN(weight))) {
     alert("Please enter valid numbers");
     return;
   }
 
-  let dosePerMin = drug.unit === "mcg/kg/min" ? dose * weight : dose;
-  let dosePerHour = dosePerMin * 60;
-  let mlPerHour = dosePerHour / drug.concentration;
+  let mlPerHour = 0;
+  let info = "";
+
+  switch (drug.calcType) {
+
+    case "WEIGHT_CONTINUOUS":
+      const doseMin = dose * weight;
+      const doseHour = doseMin * 60;
+      mlPerHour = doseHour / drug.concentration;
+      info = `Weight-based infusion<br>Diluent: ${drug.diluent.join(" / ")}`;
+      break;
+
+    case "NON_WEIGHT_CONTINUOUS":
+      mlPerHour = (dose * 60) / drug.concentration;
+      info = `Non-weight infusion<br>Diluent: ${drug.diluent.join(" / ")}`;
+      break;
+  }
 
   document.getElementById("result").innerHTML =
-    `Dose per minute: ${dosePerMin.toFixed(2)} mcg<br>
-     Dose per hour: ${dosePerHour.toFixed(2)} mcg<br>
-     <b>Pump Rate: ${mlPerHour.toFixed(2)} mL/hr</b>`;
+    `<b>Pump Rate:</b> ${mlPerHour.toFixed(2)} mL/hr<br>${info}`;
 
   if (drug.highAlert) {
     document.getElementById("warning").innerHTML =
-      "🔴 HIGH ALERT MEDICATION – Double check required!";
+      "🔴 HIGH-ALERT MEDICATION – Independent double check required";
     document.getElementById("warning").style.color = "red";
+  } else {
+    document.getElementById("warning").innerHTML = "";
   }
 }
 </script>
+
 
 </body>
 </html>
