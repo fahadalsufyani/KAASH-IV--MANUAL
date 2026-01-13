@@ -71,45 +71,49 @@ button {
 </div>
 
 <script>
-const drugs = [
-  { name: "Norepinephrine", highAlert: true, calcType: "WEIGHT_CONTINUOUS", unit: "mcg/kg/min", concentration: 8, diluent: ["NS","D5W"] },
-  { name: "Dopamine", highAlert: true, calcType: "WEIGHT_CONTINUOUS", unit: "mcg/kg/min", concentration: 1600, diluent: ["NS","D5W"] },
-  { name: "Dobutamine", highAlert: true, calcType: "WEIGHT_CONTINUOUS", unit: "mcg/kg/min", concentration: 500, diluent: ["NS","D5W"] },
-  { name: "Epinephrine", highAlert: true, calcType: "NON_WEIGHT_CONTINUOUS", unit: "mcg/min", concentration: 4, diluent: ["D5W"] },
-  { name: "Nitroglycerin", highAlert: true, calcType: "NON_WEIGHT_CONTINUOUS", unit: "mcg/min", concentration: 200, diluent: ["NS","D5W"] }
-];
+document.addEventListener("DOMContentLoaded", function () {
 
-const drugSelect = document.getElementById("drug");
-drugSelect.innerHTML = "";
+  const drugs = [
+    { name: "Norepinephrine", highAlert: true, calcType: "WEIGHT_CONTINUOUS", concentration: 8, diluent: ["NS","D5W"] },
+    { name: "Dopamine", highAlert: true, calcType: "WEIGHT_CONTINUOUS", concentration: 1600, diluent: ["NS","D5W"] },
+    { name: "Dobutamine", highAlert: true, calcType: "WEIGHT_CONTINUOUS", concentration: 500, diluent: ["NS","D5W"] },
+    { name: "Epinephrine", highAlert: true, calcType: "NON_WEIGHT_CONTINUOUS", concentration: 4, diluent: ["D5W"] },
+    { name: "Nitroglycerin", highAlert: true, calcType: "NON_WEIGHT_CONTINUOUS", concentration: 200, diluent: ["NS","D5W"] }
+  ];
 
-drugs.forEach(d => {
-  const opt = document.createElement("option");
-  opt.value = d.name;
-  opt.textContent = d.name;
-  drugSelect.appendChild(opt);
+  const drugSelect = document.getElementById("drug");
+  drugSelect.innerHTML = "";
+
+  drugs.forEach(drug => {
+    const option = document.createElement("option");
+    option.value = drug.name;
+    option.textContent = drug.name;
+    drugSelect.appendChild(option);
+  });
+
+  window.calculate = function () {
+    const drug = drugs.find(d => d.name === drugSelect.value);
+    const weight = parseFloat(document.getElementById("weight").value);
+    const dose = parseFloat(document.getElementById("dose").value);
+
+    let mlHr;
+    if (drug.calcType === "WEIGHT_CONTINUOUS") {
+      mlHr = (dose * weight * 60) / drug.concentration;
+    } else {
+      mlHr = (dose * 60) / drug.concentration;
+    }
+
+    document.getElementById("result").innerHTML =
+      `<b>Pump Rate:</b> ${mlHr.toFixed(2)} mL/hr<br>
+       <b>Diluent:</b> ${drug.diluent.join(" / ")}`;
+
+    document.getElementById("warning").innerHTML =
+      drug.highAlert ? "🔴 HIGH ALERT MEDICATION – Double check required" : "";
+  };
+
 });
-
-function calculate() {
-  const drug = drugs.find(d => d.name === drugSelect.value);
-  const weight = parseFloat(document.getElementById("weight").value);
-  const dose = parseFloat(document.getElementById("dose").value);
-
-  let mlPerHour = 0;
-
-  if (drug.calcType === "WEIGHT_CONTINUOUS") {
-    mlPerHour = (dose * weight * 60) / drug.concentration;
-  } else {
-    mlPerHour = (dose * 60) / drug.concentration;
-  }
-
-  document.getElementById("result").innerHTML =
-    `<b>Pump Rate:</b> ${mlPerHour.toFixed(2)} mL/hr<br>
-     <b>Diluent:</b> ${drug.diluent.join(" / ")}`;
-
-  document.getElementById("warning").innerHTML =
-    drug.highAlert ? "🔴 HIGH ALERT MEDICATION – Double check required" : "";
-}
 </script>
+
 
 
 </body>
